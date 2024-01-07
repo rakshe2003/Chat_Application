@@ -1,0 +1,70 @@
+<!-- templates/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
+</head>
+<body>
+    <h1>Welcome to the Chat Application</h1>
+
+    <form id="join-form">
+        <label for="username">Username:</label>
+        <input type="text" id="username" required>
+        <label for="room">Room:</label>
+        <input type="text" id="room" required>
+        <button type="submit">Join</button>
+    </form>
+
+    <div id="chat-room" style="display: none;">
+        <div id="messages"></div>
+        <form id="message-form">
+            <input type="text" id="message" autocomplete="off" required>
+            <button type="submit">Send</button>
+        </form>
+        <button id="leave-btn">Leave Room</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // Join the chat room
+        document.getElementById('join-form').onsubmit = function(e) {
+            e.preventDefault();
+            var username = document.getElementById('username').value;
+            var room = document.getElementById('room').value;
+            socket.emit('join', {'username': username, 'room': room});
+            document.getElementById('join-form').style.display = 'none';
+            document.getElementById('chat-room').style.display = 'block';
+        };
+
+        // Leave the chat room
+        document.getElementById('leave-btn').onclick = function() {
+            var username = document.getElementById('username').value;
+            var room = document.getElementById('room').value;
+            socket.emit('leave', {'username': username, 'room': room});
+            document.getElementById('join-form').style.display = 'block';
+            document.getElementById('chat-room').style.display = 'none';
+        };
+
+        // Send a message
+        document.getElementById('message-form').onsubmit = function(e) {
+            e.preventDefault();
+            var username = document.getElementById('username').value;
+            var room = document.getElementById('room').value;
+            var message = document.getElementById('message').value;
+            socket.emit('message', {'username': username, 'room': room, 'message': message});
+            document.getElementById('message').value = '';
+        };
+
+        // Receive and display messages
+        socket.on('message', function(data) {
+            var messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += '<p>' + data.msg + '</p>';
+        });
+    </script>
+</body>
+</html>
